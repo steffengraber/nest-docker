@@ -1,4 +1,4 @@
-FROM buildpack-deps:bionic as buildermaster
+FROM buildpack-deps:eoan as buildermaster
 LABEL maintainer="s.graber@fz-juelich.de"
 
 ARG WITH_MPI=ON
@@ -12,7 +12,7 @@ ENV TERM=xterm \
     DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libtool automake autotools-dev libreadline7 libreadline-dev freeglut3-dev \
+    build-essential libtool automake autotools-dev libreadline8 libreadline-dev freeglut3-dev \
     gosu \
     cmake \
     cython3 \
@@ -20,7 +20,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libboost-filesystem-dev \
     libboost-regex-dev \
     libboost-wave-dev \
-    # libboost-python-dev \
     libboost-program-options-dev \
 	libboost-test-dev \
 	libgomp1 \
@@ -28,17 +27,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libltdl7 \
     libltdl-dev \
     libmusic1v5 \
-    # libmusic-dev \
-    # libncurses5-dev \
     libopenmpi-dev \
     libomp-dev \
     libpcre3 \
     libpcre3-dev \
-    llvm-3.9-dev \
-    # music-bin \
+    libpython3.7 \
+    llvm-dev \
     openmpi-bin \
     pep8 \
-    python3.6-dev \
+    python3-dev \
     python3-ipython \
     python3-jupyter-core \
     python3-matplotlib \
@@ -47,6 +44,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-numpy \
     python3-pandas \
     python3-path \
+    python3-pip \
     python3-scipy \
     python3-setuptools \
     python3-statsmodels \
@@ -57,7 +55,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/* && \
     # update-alternatives --remove-all python && \
-    update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+    update-alternatives --install /usr/bin/python python /usr/bin/python3 10 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10
+
+# RUN pip install scikit-build && \
+#     pip install cmake
 
 
 # Install music
@@ -73,22 +75,21 @@ RUN wget https://github.com/INCF/MUSIC/archive/master.tar.gz && \
 	cd / && \
     rm master.tar.gz
 
-# RUN cd /tmp && \
-#    git clone https://github.com/INCF/libneurosim.git libneurosim && \
-#    cd /tmp/libneurosim && \
+# Install libneurosim
+# RUN git clone https://github.com/INCF/libneurosim.git libneurosim && \
+#    cd libneurosim && \
 #    chmod +x autogen.sh && \
 #    ./autogen.sh && \
 #    chmod +x configure && \
-#    ./configure --with-python=3 && make &&  make install &&\
-#    rm -rf /tmp/*
-###############################################################################
-##
-## If you want libneurosim you need to install it in the min-image below, too
-##
-###############################################################################
+#    ./configure --prefix=/opt/libneurosim-install --with-python=3 && \
+#    make && \
+#    make install
 
-RUN wget https://github.com/nest/nest-simulator/archive/master.tar.gz && \
-  tar -zxf master.tar.gz && \
+# Install NEST
+RUN git clone https://github.com/nest/nest-simulator.git && \
+  cd nest-simulator && \
+  git checkout master && \
+  cd .. && \
   mkdir nest-build && \
   ls -l && \
   cd  nest-build && \
@@ -100,21 +101,20 @@ RUN wget https://github.com/nest/nest-simulator/archive/master.tar.gz && \
 	    -Dwith-gsl=$WITH_GSL \
 	    -Dwith-readline=ON \
         -Dwith-python=3 \
-        -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so \
-	    -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m \
+        -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.7m.so \
+	    -DPYTHON_INCLUDE_DIR=/usr/include/python3.7m \
         -Dwith-mpi=$WITH_MPI \
         -Dwith-openmp=$WITH_OMP \
-        # -DPYNEUROSIM_LIBRARY=/usr/local/lib \
-        # -Dwith-libneurosim:BOOL=$WITH_LIBNEUROSIM /usr/local/lib \
+        -Dwith-libneurosim=$WITH_LIBNEUROSIM \
         -Dwith-music=/opt/music-install \
-        ../nest-simulator-master && \
+        ../nest-simulator && \
   make && \
   make install
 
 
 ###############################################################################
 
-FROM ubuntu:bionic
+FROM ubuntu:eoan
 LABEL maintainer="s.graber@fz-juelich.de"
 
 ENV TERM=xterm \
@@ -127,25 +127,33 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libgomp1 \
         libgsl-dev  \
         libltdl7 \
-        # libmusic1v5 \
         libopenmpi-dev \
         libomp-dev \
-        libpython3.6 \
-        # music-bin \
+        libpython3.7 \
         nano \
         openmpi-bin \
         openssh-client \
         python3-matplotlib \
         python3-mpi4py \
         python3-numpy \
+        python3-pip \
         python3-scipy \
+        python3-setuptools \
         python3-pandas \
         python3-sympy \
-        python3-tk && \
+        python3-tk \
+        wget  && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/* && \
-    ln -s /usr/bin/python3 /usr/bin/python
-
+    update-alternatives --install /usr/bin/python python /usr/bin/python3 10 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10 && \
+    pip install quantities lazyarray neo && \
+    # wget https://github.com/NeuralEnsemble/PyNN/archive/nest-dev.tar.gz && \
+    # tar -xzf nest-dev.tar.gz && \
+    # cd PyNN-nest-dev && \
+    # python3 setup.py install && \
+    # cd .. && rm -rf PyNN-nest-dev && rm nest-dev.tar.gz
+    pip install --no-binary :all: PyNN
 
 COPY --from=buildermaster /opt/nest /opt/nest
 COPY --from=buildermaster /opt/music-install /opt/music-install

@@ -4,8 +4,7 @@ LABEL maintainer="s.graber@fz-juelich.de"
 ARG WITH_MPI=ON
 ARG WITH_OMP=ON
 ARG WITH_GSL=ON
-#ARG WITH_MUSIC=ON
-ARG WITH_LIBNEUROSIM=OFF
+ARG WITH_LIBNEUROSIM=ON
 
 ENV TERM=xterm \
     TZ=Europe/Berlin \
@@ -71,21 +70,17 @@ RUN wget https://github.com/INCF/MUSIC/archive/master.tar.gz && \
 	make && \
 	make install
 
-
-# RUN cd /tmp && \
-#    git clone https://github.com/INCF/libneurosim.git libneurosim && \
-#    cd /tmp/libneurosim && \
+# Install libneurosim
+# RUN git clone https://github.com/INCF/libneurosim.git libneurosim && \
+#    cd libneurosim && \
 #    chmod +x autogen.sh && \
 #    ./autogen.sh && \
 #    chmod +x configure && \
-#    ./configure --with-python=3 && make &&  make install &&\
-#    rm -rf /tmp/*
-###############################################################################
-##
-## If you want libneurosim you need to install it in the min-image below, too
-##
-###############################################################################
+#    ./configure --prefix=/opt/libneurosim-install --with-python=3 && \
+#    make && \
+#    make install
 
+# Install NEST
 RUN wget https://github.com/nest/nest-simulator/archive/v2.18.0.tar.gz && \
   mkdir nest-build && \
   tar zxf v2.18.0.tar.gz && \
@@ -102,8 +97,6 @@ RUN wget https://github.com/nest/nest-simulator/archive/v2.18.0.tar.gz && \
 	    -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m \
         -Dwith-mpi=$WITH_MPI \
         -Dwith-openmp=$WITH_OMP \
-        # -DPYNEUROSIM_LIBRARY=/usr/local/lib \
-        # -Dwith-libneurosim:BOOL=$WITH_LIBNEUROSIM /usr/local/lib \
         -Dwith-music=/opt/music-install \
         ../nest-simulator-2.18.0 && \
   make && \
@@ -127,24 +120,32 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libgomp1 \
         libgsl-dev  \
         libltdl7 \
-        # libmusic1v5 \
         libopenmpi-dev \
         libomp-dev \
         libpython3.6 \
-        # music-bin \
         nano \
         openmpi-bin \
         openssh-client \
         python3-matplotlib \
         python3-mpi4py \
         python3-numpy \
+        python3-pip \
         python3-scipy \
+        python3-setuptools \
         python3-pandas \
         python3-sympy \
         python3-tk && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/* && \
-    ln -s /usr/bin/python3 /usr/bin/python
+    update-alternatives --install /usr/bin/python python /usr/bin/python3 10 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10 && \
+    pip install quantities lazyarray neo && \
+    # wget https://github.com/NeuralEnsemble/PyNN/archive/nest-dev.tar.gz && \
+    # tar -xzf nest-dev.tar.gz && \
+    # cd PyNN-nest-dev && \
+    # python3 setup.py install && \
+    # cd .. && rm -rf PyNN-nest-dev && rm nest-dev.tar.gz
+    pip install --no-binary :all: PyNN
 
 COPY --from=builder218 /opt/nest /opt/nest
 COPY --from=builder218 /opt/music-install /opt/music-install
