@@ -1,4 +1,4 @@
-FROM buildpack-deps:bionic as buildermaster
+FROM buildpack-deps:eoan as buildermaster
 LABEL maintainer="s.graber@fz-juelich.de"
 
 ARG WITH_MPI=ON
@@ -12,7 +12,7 @@ ENV TERM=xterm \
     DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libtool automake autotools-dev libreadline7 libreadline-dev freeglut3-dev \
+    build-essential libtool automake autotools-dev libreadline8 libreadline-dev freeglut3-dev \
     gosu \
     cmake \
     cython3 \
@@ -34,11 +34,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libomp-dev \
     libpcre3 \
     libpcre3-dev \
-    llvm-3.9-dev \
+    llvm-dev \
     # music-bin \
     openmpi-bin \
     pep8 \
-    python3.6-dev \
+    python3-dev \
     python3-ipython \
     python3-jupyter-core \
     python3-matplotlib \
@@ -57,8 +57,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/* && \
     # update-alternatives --remove-all python && \
-    update-alternatives --install /usr/bin/python python /usr/bin/python3 10
-
+    update-alternatives --install /usr/bin/python python /usr/bin/python3 10 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10
 
 # Install music
 RUN wget https://github.com/INCF/MUSIC/archive/master.tar.gz && \
@@ -87,8 +87,10 @@ RUN wget https://github.com/INCF/MUSIC/archive/master.tar.gz && \
 ##
 ###############################################################################
 
-RUN wget https://github.com/nest/nest-simulator/archive/master.tar.gz && \
-  tar -zxf master.tar.gz && \
+RUN git clone https://github.com/nest/nest-simulator.git && \
+  cd nest-simulator && \
+  git checkout nest-2.20 && \
+  cd .. && \
   mkdir nest-build && \
   ls -l && \
   cd  nest-build && \
@@ -100,21 +102,20 @@ RUN wget https://github.com/nest/nest-simulator/archive/master.tar.gz && \
 	    -Dwith-gsl=$WITH_GSL \
 	    -Dwith-readline=ON \
         -Dwith-python=3 \
-        -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so \
-	    -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m \
+        -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.7m.so \
+	    -DPYTHON_INCLUDE_DIR=/usr/include/python3.7m \
         -Dwith-mpi=$WITH_MPI \
         -Dwith-openmp=$WITH_OMP \
-        # -DPYNEUROSIM_LIBRARY=/usr/local/lib \
-        # -Dwith-libneurosim:BOOL=$WITH_LIBNEUROSIM /usr/local/lib \
+        -Dwith-libneurosim=$WITH_LIBNEUROSIM \
         -Dwith-music=/opt/music-install \
-        ../nest-simulator-master && \
+        ../nest-simulator && \
   make && \
   make install
 
 
 ###############################################################################
 
-FROM ubuntu:bionic
+FROM ubuntu:eoan
 LABEL maintainer="s.graber@fz-juelich.de"
 
 ENV TERM=xterm \
@@ -130,7 +131,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         # libmusic1v5 \
         libopenmpi-dev \
         libomp-dev \
-        libpython3.6 \
+        libpython3.7 \
         # music-bin \
         nano \
         openmpi-bin \
@@ -144,7 +145,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python3-tk && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/* && \
-    ln -s /usr/bin/python3 /usr/bin/python
+    update-alternatives --install /usr/bin/python python /usr/bin/python3 10 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10 && \
+    pip install quantities lazyarray neo && \
+    # wget https://github.com/NeuralEnsemble/PyNN/archive/nest-dev.tar.gz && \
+    # tar -xzf nest-dev.tar.gz && \
+    # cd PyNN-nest-dev && \
+    # python3 setup.py install && \
+    # cd .. && rm -rf PyNN-nest-dev && rm nest-dev.tar.gz
+    pip install --no-binary :all: PyNN
+
 
 
 COPY --from=buildermaster /opt/nest /opt/nest
