@@ -16,12 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     cython3 \
     jq \
-    libboost-filesystem-dev \
-    libboost-regex-dev \
-    libboost-wave-dev \
-    # libboost-python-dev \
-    libboost-program-options-dev \
-	libboost-test-dev \
+    libboost-all-dev \
 	libgomp1 \
     libgsl-dev \
     libltdl7 \
@@ -41,7 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-ipython \
     python3-jupyter-core \
     python3-matplotlib \
-    python3-mpi4py \
+    python3-mpi4py \maek
     python3-nose \
     python3-numpy \
     python3-pandas \
@@ -88,7 +83,7 @@ RUN wget https://github.com/nest/nest-simulator/archive/v2.18.0.tar.gz && \
   cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/nest/ \
   		# -Dwith-optimize=ON \
 		# -Dwith-warning=ON \
-		# -Dwith-boost=ON \
+		-Dwith-boost=ON \
 		-Dwith-ltdl=ON \
 	    -Dwith-gsl=$WITH_GSL \
 	    -Dwith-readline=ON \

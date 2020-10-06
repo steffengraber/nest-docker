@@ -1,4 +1,4 @@
-FROM buildpack-deps:eoan as buildermaster
+FROM buildpack-deps:focal as buildermaster
 LABEL maintainer="s.graber@fz-juelich.de"
 
 ARG WITH_MPI=ON
@@ -17,11 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     cython3 \
     jq \
-    libboost-filesystem-dev \
-    libboost-regex-dev \
-    libboost-wave-dev \
-    libboost-program-options-dev \
-	libboost-test-dev \
+    libboost1.67-dev \
 	libgomp1 \
     libgsl-dev \
     libltdl7 \
@@ -31,7 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libomp-dev \
     libpcre3 \
     libpcre3-dev \
-    libpython3.7 \
+    libpython3.8 \
     llvm-dev \
     openmpi-bin \
     pep8 \
@@ -57,9 +53,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # update-alternatives --remove-all python && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 10 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10
-
-# RUN pip install scikit-build && \
-#     pip install cmake
 
 
 # Install music
@@ -96,13 +89,12 @@ RUN git clone https://github.com/nest/nest-simulator.git && \
   cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/nest/ \
         # -Dwith-optimize=ON \
 		# -Dwith-warning=ON \
-		# -Dwith-boost=ON \
 		-Dwith-ltdl=ON \
 	    -Dwith-gsl=$WITH_GSL \
 	    -Dwith-readline=ON \
-        -Dwith-python=3 \
-        -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.7m.so \
-	    -DPYTHON_INCLUDE_DIR=/usr/include/python3.7m \
+        -Dwith-python=ON \
+        -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.8.so \
+	    -DPYTHON_INCLUDE_DIR=/usr/include/python3.8 \
         -Dwith-mpi=$WITH_MPI \
         -Dwith-openmp=$WITH_OMP \
         -Dwith-libneurosim=$WITH_LIBNEUROSIM \
@@ -114,7 +106,7 @@ RUN git clone https://github.com/nest/nest-simulator.git && \
 
 ###############################################################################
 
-FROM ubuntu:eoan
+FROM ubuntu:focal
 LABEL maintainer="s.graber@fz-juelich.de"
 
 ENV TERM=xterm \
@@ -122,6 +114,10 @@ ENV TERM=xterm \
     DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        curl \
+        libpcre3 \
+        libpcre3-dev \
         gosu \
         jupyter-notebook \
         less \
@@ -130,10 +126,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libltdl7 \
         libopenmpi-dev \
         libomp-dev \
-        libpython3.7 \
+        libpython3.8 \
         nano \
         openmpi-bin \
         openssh-client \
+        openssh-server \
+        python3-dev \
+        python3-flask \
+        python3-flask-cors \
+        python3-restrictedpython \
         python3-matplotlib \
         python3-mpi4py \
         python3-numpy \
@@ -148,7 +149,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/* && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 10 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10 && \
-    pip install quantities lazyarray neo && \
+    pip install quantities lazyarray neo  && \
+    pip install uwsgi &&\
     # wget https://github.com/NeuralEnsemble/PyNN/archive/nest-dev.tar.gz && \
     # tar -xzf nest-dev.tar.gz && \
     # cd PyNN-nest-dev && \
@@ -162,5 +164,5 @@ COPY --from=buildermaster /opt/music-install /opt/music-install
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-EXPOSE 8080
+EXPOSE 5000 8080
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
