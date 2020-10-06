@@ -1,15 +1,23 @@
-FROM buildpack-deps:bionic
+FROM buildpack-deps:focal as travisbuilder
 LABEL maintainer="s.graber@fz-juelich.de"
+
+ARG WITH_MPI=ON
+ARG WITH_OMP=ON
+ARG WITH_GSL=ON
+#ARG WITH_MUSIC=ON
+ARG WITH_LIBNEUROSIM=OFF
 
 ENV TERM=xterm \
     TZ=Europe/Berlin \
     DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libtool automake autotools-dev libreadline7 libreadline-dev freeglut3-dev \
+    build-essential libtool automake autotools-dev libreadline8 libreadline-dev freeglut3-dev \
     gosu \
+    cmake \
+    cython3 \
     jq \
-    libboost-all-dev \
+    libboost1.67-dev \
 	libgomp1 \
     libgsl-dev \
     libltdl7 \
@@ -17,19 +25,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libmusic1v5 \
     libopenmpi-dev \
     libomp-dev \
-    libblas3 \
-    liblapack3 \
-    libpsm-infinipath1 \
     libpcre3 \
     libpcre3-dev \
-    libpython3.6 \
+    libpython3.8 \
     llvm-dev \
     openmpi-bin \
-    openssh-client \
     pep8 \
-    libboost-all-dev \
+    python3-dev \
+    python3-ipython \
+    python3-jupyter-core \
     python3-matplotlib \
     python3-mpi4py \
+    python3-nose \
     python3-numpy \
     python3-pandas \
     python3-path \
@@ -38,6 +45,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-setuptools \
     python3-statsmodels \
     python3-tk \
+    python-dev \
     vera++ \
     wget  && \
     apt-get autoremove -y && \
@@ -46,9 +54,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 10 && \
     update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10
 
-RUN python3 -m pip install --upgrade pip  && \
-      pip3 install cmake && \
-      pip3 install Cython setuptools nose
 
 # Install music
 RUN wget https://github.com/INCF/MUSIC/archive/master.tar.gz && \
@@ -73,7 +78,6 @@ RUN git clone https://github.com/INCF/libneurosim.git libneurosim && \
     ./configure --prefix=/opt/libneurosim-install --with-python=3 && \
     make && \
     make install
-
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
