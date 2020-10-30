@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-
 # NEST environment
 source /opt/nest/bin/nest_vars.sh
 
