@@ -17,11 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     cython3 \
     jq \
-    libboost-filesystem-dev \
-    libboost-regex-dev \
-    libboost-wave-dev \
-    libboost-program-options-dev \
-	libboost-test-dev \
+    libboost-all-dev \
 	libgomp1 \
     libgsl-dev \
     libltdl7 \
@@ -72,6 +68,7 @@ RUN wget https://github.com/INCF/MUSIC/archive/master.tar.gz && \
 # Install libneurosim
 RUN git clone https://github.com/INCF/libneurosim.git libneurosim && \
     cd libneurosim && \
+    git checkout 03646747c8fe64fa3439ac2d282623b659f60c22 && \
     chmod +x autogen.sh && \
     ./autogen.sh && \
     chmod +x configure && \
@@ -87,7 +84,7 @@ RUN wget https://github.com/nest/nest-simulator/archive/v2.20.0.tar.gz && \
   cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/nest/ \
         # -Dwith-optimize=ON \
 		# -Dwith-warning=ON \
-		# -Dwith-boost=ON \
+		-Dwith-boost=ON \
 		-Dwith-ltdl=ON \
 	    -Dwith-gsl=$WITH_GSL \
 	    -Dwith-readline=ON \
@@ -115,6 +112,7 @@ ENV TERM=xterm \
 RUN apt-get update && apt-get install -y --no-install-recommends \
         gosu \
         jupyter-notebook \
+        less \
         libgomp1 \
         libgsl-dev  \
         libltdl7 \
