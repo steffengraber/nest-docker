@@ -2,7 +2,7 @@
 ###             DEV -artifacts              ###
 ###############################################
 
-Build_Dev:
+Build_Dev_test:
   stage: build
   needs: ["Build_Base"]
   script:
@@ -19,11 +19,11 @@ Build_Dev:
   tags:
     - shell-runner
 
-Test_Dev:
+Test_Dev_test:
   stage: test
-  needs: ["Build_Dev"]
+  needs: ["Build_Dev_test"]
   dependencies:
-    - Build_Dev
+    - Build_Dev_test
   script:
     - docker stop $(docker ps -q) 2>/dev/null || true
     - docker rm -f $(docker ps -aq) 2>/dev/null || true
@@ -35,14 +35,14 @@ Test_Dev:
   tags:
     - shell-runner
 
-Deploy_Dev:
+Deploy_Dev_test:
   stage: deploy
   needs:
-    - job: Test_Dev
-    - job: Build_Dev
+    - job: Test_Dev_test
+    - job: Build_Dev_test
       artifacts: true
   dependencies:
-    - Build_Dev
+    - Build_Dev_test
   script:
     - docker load < build_image.tar.gz
     - docker tag $DOCKER_REGISTRY_IMAGE:dev.$CI_PIPELINE_ID $DOCKER_REGISTRY_IMAGE:dev
