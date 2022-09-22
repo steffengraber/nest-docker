@@ -11,10 +11,10 @@ Build_Dev_test:
         --cache-from $DOCKER_REGISTRY_IMAGE:dev
         --tag $DOCKER_REGISTRY_IMAGE:dev.$CI_PIPELINE_ID 
         ./src/dev
-    - docker save $DOCKER_REGISTRY_IMAGE:dev.$CI_PIPELINE_ID | gzip > build_image.tar.gz
+    - docker save $DOCKER_REGISTRY_IMAGE:dev.$CI_PIPELINE_ID | gzip > $CI_PIPELINE_ID-build_image.tar.gz
   artifacts:
     paths:
-      - build_image.tar.gz
+      - $CI_PIPELINE_ID-build_image.tar.gz
     expire_in: 1 day
   tags:
     - shell-runner
@@ -27,7 +27,7 @@ Test_Dev_test:
   script:
     - docker stop $(docker ps -q) 2>/dev/null || true
     - docker rm -f $(docker ps -aq) 2>/dev/null || true
-    - docker load  < build_image.tar.gz
+    - docker load  < $CI_PIPELINE_ID-build_image.tar.gz
     - docker ps
     - docker run -i -d --rm -e NEST_CONTAINER_MODE=nest-server -p 5000:5000
         --name $CI_PIPELINE_ID $DOCKER_REGISTRY_IMAGE:dev.$CI_PIPELINE_ID
@@ -44,7 +44,7 @@ Deploy_Dev_test:
   dependencies:
     - Build_Dev_test
   script:
-    - docker load < build_image.tar.gz
+    - docker load < $CI_PIPELINE_ID-build_image.tar.gz
     - docker tag $DOCKER_REGISTRY_IMAGE:dev.$CI_PIPELINE_ID $DOCKER_REGISTRY_IMAGE:dev
     # - docker push $DOCKER_REGISTRY_IMAGE:dev
   tags:
