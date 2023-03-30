@@ -143,7 +143,7 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-RUN pip install quantities lazyarray && \
+RUN pip install quantities lazyarray neo && \
     # wget https://github.com/NeuralEnsemble/PyNN/archive/nest-dev.tar.gz && \
     # tar -xzf nest-dev.tar.gz && \
     # cd PyNN-nest-dev && \
