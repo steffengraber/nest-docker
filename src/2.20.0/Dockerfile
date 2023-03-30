@@ -143,14 +143,13 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-RUN pip install quantities lazyarray neo PyNN 
-    # && \
+RUN pip install quantities lazyarray && \
     # wget https://github.com/NeuralEnsemble/PyNN/archive/nest-dev.tar.gz && \
     # tar -xzf nest-dev.tar.gz && \
     # cd PyNN-nest-dev && \
     # python3 setup.py install && \
     # cd .. && rm -rf PyNN-nest-dev && rm nest-dev.tar.gz
-    #pip install --no-binary :all: PyNN
+    pip install --no-binary :all: PyNN
 
 COPY --from=builder220 /opt/nest /opt/nest
 COPY --from=builder220 /opt/music-install /opt/music-install
