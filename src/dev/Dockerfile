@@ -74,7 +74,7 @@ RUN mkdir nest-build && cd nest-build && \
           -Dwith-gsl=ON \
           -Dwith-readline=ON \
           -Dwith-python=ON \
-          -Dwith-mpi=ON \
+          -Dwith-mpi=OFF \
           -Dwith-openmp=ON \
           -Dwith-music=$HOME/.cache/music.install \
           -Dwith-hdf5=ON \
