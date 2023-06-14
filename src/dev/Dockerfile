@@ -40,7 +40,7 @@ RUN python3 -m pip install sphinx_gallery==0.10.1
 RUN bash ${SRC_PATH}/nest-simulator-${NEST_VERSION}/build_support/install_music.sh
 RUN bash ${SRC_PATH}/nest-simulator-${NEST_VERSION}/build_support/install_sionlib.sh
 
-ENV PYLIB_DIR="$(python3 -c "import sysconfig; print(sysconfig.get_path('include'))" | sed 's/include/lib/')"
+ENV PYLIB_DIR=/opt/conda/env/include/lib
 RUN bash ${SRC_PATH}/nest-simulator-${NEST_VERSION}/build_support/install_csa-libneurosim.sh $PYLIB_DIR
 
 ENV CMAKE_C_COMPILER_LAUNCHER=ccache
