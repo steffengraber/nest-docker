@@ -11,9 +11,9 @@ ENV TERM=xterm \
 ENV CONDA_DIR=/opt/conda
 
 # Update system
-RUN apt-get update && apt-get upgrade -y --no-install-recommends \
-    && apt-get install -y build-essential \
-    && apt-get install -y wget \
+RUN apt-get update && apt-get install -y \
+        build-essential \
+        wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
@@ -21,7 +21,6 @@ RUN apt-get update && apt-get upgrade -y --no-install-recommends \
 
 # Put conda in path so we can use conda activate
 ENV PATH=$CONDA_DIR/bin:$PATH 
-
 
 # Download  NEST and install conda
 RUN wget https://github.com/nest/nest-simulator/archive/refs/heads/${NEST_VERSION}.tar.gz -P ${SRC_PATH} \
