@@ -11,9 +11,7 @@ ENV TERM=xterm \
 ENV CONDA_DIR=/opt/conda
 
 # Update system
-RUN apt-get update && apt-get install -y \
-        build-essential \
-        wget \
+RUN apt-get update && apt-get install wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
@@ -37,6 +35,7 @@ SHELL ["/bin/bash", "--login", "-c"]
 # Installing environment file do work
 # TODO: Fix environment file
 RUN conda install -c conda-forge python pip \
+    && conda install -c conda-forge make  gcc_linux-64 gxx_linux-64 \
     && conda install -c conda-forge cmake cython openmpi boost gsl>=1.11 libtool readline hdf5 \
     &&  conda install -c conda-forge pytest pytest-timeout pytest-xdist pytest-pylint pytest-mypy pytest-cov numpy pandas scipy mpi4py data-science-types h5py terminaltables pycodestyle rstcheck mypy cppcheck \
     &&  conda install -c conda-forge ipython matplotlib jupyter jupyterlab \
