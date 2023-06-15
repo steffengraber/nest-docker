@@ -3,7 +3,8 @@ set -e
 IP_ADDRESS=$(hostname --ip-address)
 
 # Activate conda NEST environment
-#conda activate nestenv
+. /opt/conda/etc/profile.d/conda.sh
+conda activate nestenv
 
 # NEST environment
 source /opt/nest/bin/nest_vars.sh
