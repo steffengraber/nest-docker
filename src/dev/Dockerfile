@@ -11,7 +11,7 @@ ENV TERM=xterm \
 ENV CONDA_DIR=/opt/conda
 
 # Update system
-RUN apt-get update && apt-get install wget \
+RUN apt-get update && apt-get install -y wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
