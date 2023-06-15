@@ -7,7 +7,7 @@ IP_ADDRESS=$(hostname --ip-address)
 conda activate nestenv
 
 # NEST environment
-source /opt/nest/bin/nest_vars.sh
+. /opt/nest/bin/nest_vars.sh
 
 # Running NEST to test and to copy the .nestrc into /home/nest
 nest --help
