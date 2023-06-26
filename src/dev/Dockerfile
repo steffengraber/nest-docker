@@ -13,37 +13,23 @@ ENV CONDA_DIR=/opt/conda
 # Update system
 RUN apt-get update && apt-get install -y wget \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
+    && rm -rf /var/lib/apt/lists/* 
+
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
     && /bin/bash ~/miniconda.sh -b -p /opt/conda
 
 # Put conda in path so we can use conda activate
 ENV PATH=$CONDA_DIR/bin:$PATH 
 
-# Download  NEST and install conda
-RUN wget https://github.com/nest/nest-simulator/archive/refs/heads/${NEST_VERSION}.tar.gz -P ${SRC_PATH} \
-    && cd ${SRC_PATH} && tar -xzf ${NEST_VERSION}.tar.gz \
-    && ls -l \
-    && conda create --name nestenv \
+
+
+
+COPY environment.yml environment.yml
+RUN conda env create --name nest --file environment.yml \
     && conda init bash
-# conda env create --name nestenv --file  ${SRC_PATH}/nest-simulator-${NEST_VERSION}/environment.yml
 
-# Make RUN commands use the new environment:
-RUN echo "conda activate nestenv" >> ~/.bashrc
+RUN echo "conda activate nest" >> ~/.bashrc
 SHELL ["/bin/bash", "--login", "-c"]
-
-# Installing environment file do work
-# TODO: Fix environment file
-RUN conda install -c conda-forge python pip \
-    && conda install -c conda-forge make  gcc_linux-64 gxx_linux-64 \
-    && conda install -c conda-forge cmake cython openmpi boost gsl>=1.11 libtool readline hdf5 \
-    &&  conda install -c conda-forge pytest pytest-timeout pytest-xdist pytest-pylint pytest-mypy pytest-cov numpy pandas scipy mpi4py data-science-types h5py terminaltables pycodestyle rstcheck mypy cppcheck \
-    &&  conda install -c conda-forge ipython matplotlib jupyter jupyterlab \
-    &&  conda install -c conda-forge PyYAML assimulo breathe csvkit docutils doxygen mock nbsphinx numpydoc path.py pydot recommonmark sphinx sphinx_rtd_theme tqdm yamllint \
-    &&  conda install -c conda-forge flask flask_cors gunicorn requests restrictedpython werkzeug \
-    &&  conda install -c conda-forge junitparser clang-format \
-    &&  conda install -c conda-forge graphviz setuptools \
-    &&  python3 -m pip install --no-cache-dir sphinx_gallery==0.10.1 junitparser>=2 clang-format==13.0 example Image sphinx_autobuild sphinx-tabs sphinx_design sphinx-material sphinx-copybutton
 
 # Installing build support
 # Not used in cmake, so do not to install
@@ -57,6 +43,10 @@ ENV PYLIB_DIR=/opt/conda/env/include/lib
 #ENV CMAKE_CXX_COMPILER_LAUNCHER=ccache
 #ENV CXX_FLAGS="-pedantic -Wextra -Wno-unknown-pragmas -D_GLIBCXX_ASSERTIONS"
 #-DCMAKE_CXX_FLAGS="$CXX_FLAGS" 
+# Download  NEST 
+RUN wget https://github.com/nest/nest-simulator/archive/refs/heads/${NEST_VERSION}.tar.gz -P ${SRC_PATH} \
+    && cd ${SRC_PATH} && tar -xzf ${NEST_VERSION}.tar.gz 
+    
 RUN bash ${SRC_PATH}/nest-simulator-${NEST_VERSION}/build_support/install_csa-libneurosim.sh $PYLIB_DIR \
     && mkdir nest-build && cd nest-build && \
     cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/nest \              
@@ -85,12 +75,6 @@ RUN bash ${SRC_PATH}/nest-simulator-${NEST_VERSION}/build_support/install_csa-li
     python3 -m pip install --no-cache-dir jupyter notebook && \
     python3 -m pip install --no-cache-dir quantities lazyarray neo && \
     python3 -m pip install --no-cache-dir --no-binary :all: PyNN && \
-    python3 -m pip install --no-cache-dir Flask --upgrade && \
-    python3 -m pip install --no-cache-dir Flask-cors --upgrade && \
-    python3 -m pip install --no-cache-dir RestrictedPython --upgrade && \
-    python3 -m pip install --no-cache-dir MarkupSafe==2.0.1 && \
-    python3 -m pip install --no-cache-dir gunicorn && \
-    python3 -m pip install --no-cache-dir jupyterlab && \
     python3 -m pip install --no-cache-dir elephant[extras] && \
     python3 -m pip install --no-cache-dir MarkupSafe==2.0.1 && \ 
     python3 -m pip install --no-cache-dir nest-desktop --pre && \
