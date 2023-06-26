@@ -1,12 +1,14 @@
-FROM ubuntu:jammy
+FROM docker-registry.ebrains.eu/nest/nest-simulator:nest-simulator-build-base as builder
 LABEL maintainer="s.graber@fz-juelich.de"
 
 ARG NEST_VERSION=master
 ARG SRC_PATH=/tmp
 
-ENV TERM=xterm \
-    TZ=Europe/Berlin \
-    DEBIAN_FRONTEND=noninteractive
+# Install NEST and NESTML
+RUN wget https://github.com/nest/nest-simulator/archive/refs/heads/${NEST_VERSION}.tar.gz -P ${SRC_PATH} && \
+    cd ${SRC_PATH} && tar -xzf ${NEST_VERSION}.tar.gz && ls -l && \
+    python3 -m pip install -r ${SRC_PATH}/nest-simulator-${NEST_VERSION}/doc/requirements.txt && \
+    python3 -m pip install sphinx_gallery==0.10.1
 
 ENV CONDA_DIR=/opt/conda
 
@@ -51,15 +53,13 @@ RUN bash ${SRC_PATH}/nest-simulator-${NEST_VERSION}/build_support/install_csa-li
     && mkdir nest-build && cd nest-build && \
     cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/nest \              
           -Dwith-warning=ON \
-          -Dwith-devdoc=ON \
-          -Dwith-optimize=ON \
           -Dwith-userdoc=ON \
           -Dwith-boost=ON \
           -Dwith-ltdl=ON \
           -Dwith-gsl=ON \
           -Dwith-readline=ON \
           -Dwith-python=ON \
-          -Dwith-mpi=OFF \
+          -Dwith-mpi=ON \
           -Dwith-openmp=ON \
           -Dwith-music=OFF \
           -Dwith-hdf5=ON \
@@ -80,13 +80,16 @@ RUN bash ${SRC_PATH}/nest-simulator-${NEST_VERSION}/build_support/install_csa-li
     python3 -m pip install --no-cache-dir nest-desktop --pre && \
     python3 -m pip install --no-cache-dir https://github.com/nest/nestml/archive/refs/heads/master.zip --upgrade
 
-RUN  conda clean --all
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install nest-desktop --pre && \
+    python3 -m pip uninstall nestml -y && \
+    python3 -m pip install https://github.com/nest/nestml/archive/refs/heads/master.zip --upgrade
 
-COPY entrypoint-conda.sh /usr/local/bin/entrypoint-conda.sh
-RUN chmod +x /usr/local/bin/entrypoint-conda.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 COPY test-nest.sh /opt/test-nest.sh
 RUN chmod +x /opt/test-nest.sh
 
 EXPOSE 8080 52425 54286
-ENTRYPOINT ["/usr/local/bin/entrypoint-conda.sh"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
